@@ -83,6 +83,11 @@ app.get('/', (req, res) => {
         health: '/api/health',
         info: '/api/info',
         scrape: '/api/scrape?product=<name>&location=<name>',
+        dmart: '/api/dmart?product=<name>&location=<name>',
+        swiggy: '/api/swiggy?product=<name>&location=<name>',
+        naturesbasket: '/api/naturesbasket?product=<name>&location=<name>',
+        zepto: '/api/zepto?product=<name>&location=<name>',
+        jiomart: '/api/jiomart?product=<name>&location=<name>',
         jobStatus: '/api/job/<jobId>',
         json: '/api/json/<jobId>'
       },
@@ -119,7 +124,12 @@ app.get('/api/info', (req, res) => {
     },
     endpoints: {
       'GET /api/health': 'Health check endpoint (instant)',
-      'GET /api/scrape?product=<name>&location=<name>': 'Start scraping job (returns immediately)',
+      'GET /api/scrape?product=<name>&location=<name>': 'Start scraping job for all websites (returns immediately)',
+      'GET /api/dmart?product=<name>&location=<name>': 'Start scraping job for D-Mart only (returns immediately)',
+      'GET /api/swiggy?product=<name>&location=<name>': 'Start scraping job for Swiggy Instamart only (returns immediately)',
+      'GET /api/naturesbasket?product=<name>&location=<name>': "Start scraping job for Nature's Basket only (returns immediately)",
+      'GET /api/zepto?product=<name>&location=<name>': 'Start scraping job for Zepto only (returns immediately)',
+      'GET /api/jiomart?product=<name>&location=<name>': 'Start scraping job for JioMart only (returns immediately)',
       'GET /api/job/<jobId>': 'Check job status',
       'GET /api/json/<jobId>': 'Get clean JSON output for completed job',
       'GET /api/info': 'Get API information (instant)'
@@ -265,6 +275,440 @@ app.get('/api/job/:jobId', (req, res) => {
     error: job.error
   });
 });
+
+/**
+ * GET /api/dmart - Scrape D-Mart only
+ */
+app.get('/api/dmart', async (req, res) => {
+  const { product, location } = req.query;
+
+  if (!product || !location) {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing required parameters',
+      message: 'Both "product" and "location" query parameters are required',
+      example: '/api/dmart?product=lays&location=RT%20Nagar'
+    });
+  }
+
+  const jobId = `dmart-${Date.now()}-${++jobCounter}`;
+  const job = {
+    id: jobId,
+    website: 'dmart',
+    product,
+    location,
+    status: 'queued',
+    createdAt: new Date().toISOString(),
+    result: null,
+    error: null
+  };
+  
+  jobs.set(jobId, job);
+
+  scrapeSingleWebsiteInBackground(jobId, 'dmart', product, location).catch(err => {
+    console.error(`Job ${jobId} failed:`, err);
+    const job = jobs.get(jobId);
+    if (job) {
+      job.status = 'failed';
+      job.error = err.message;
+    }
+  });
+
+  res.status(202).json({
+    success: true,
+    message: 'D-Mart scraping job started',
+    jobId: jobId,
+    status: 'queued',
+    checkStatus: `/api/job/${jobId}`,
+    product,
+    location,
+    timestamp: job.createdAt
+  });
+});
+
+/**
+ * GET /api/swiggy - Scrape Swiggy Instamart only
+ */
+app.get('/api/swiggy', async (req, res) => {
+  const { product, location } = req.query;
+
+  if (!product || !location) {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing required parameters',
+      message: 'Both "product" and "location" query parameters are required',
+      example: '/api/swiggy?product=lays&location=RT%20Nagar'
+    });
+  }
+
+  const jobId = `swiggy-${Date.now()}-${++jobCounter}`;
+  const job = {
+    id: jobId,
+    website: 'swiggy',
+    product,
+    location,
+    status: 'queued',
+    createdAt: new Date().toISOString(),
+    result: null,
+    error: null
+  };
+  
+  jobs.set(jobId, job);
+
+  scrapeSingleWebsiteInBackground(jobId, 'swiggy', product, location).catch(err => {
+    console.error(`Job ${jobId} failed:`, err);
+    const job = jobs.get(jobId);
+    if (job) {
+      job.status = 'failed';
+      job.error = err.message;
+    }
+  });
+
+  res.status(202).json({
+    success: true,
+    message: 'Swiggy Instamart scraping job started',
+    jobId: jobId,
+    status: 'queued',
+    checkStatus: `/api/job/${jobId}`,
+    product,
+    location,
+    timestamp: job.createdAt
+  });
+});
+
+/**
+ * GET /api/naturesbasket - Scrape Nature's Basket only
+ */
+app.get('/api/naturesbasket', async (req, res) => {
+  const { product, location } = req.query;
+
+  if (!product || !location) {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing required parameters',
+      message: 'Both "product" and "location" query parameters are required',
+      example: '/api/naturesbasket?product=lays&location=RT%20Nagar'
+    });
+  }
+
+  const jobId = `naturesbasket-${Date.now()}-${++jobCounter}`;
+  const job = {
+    id: jobId,
+    website: 'naturesbasket',
+    product,
+    location,
+    status: 'queued',
+    createdAt: new Date().toISOString(),
+    result: null,
+    error: null
+  };
+  
+  jobs.set(jobId, job);
+
+  scrapeSingleWebsiteInBackground(jobId, 'naturesbasket', product, location).catch(err => {
+    console.error(`Job ${jobId} failed:`, err);
+    const job = jobs.get(jobId);
+    if (job) {
+      job.status = 'failed';
+      job.error = err.message;
+    }
+  });
+
+  res.status(202).json({
+    success: true,
+    message: "Nature's Basket scraping job started",
+    jobId: jobId,
+    status: 'queued',
+    checkStatus: `/api/job/${jobId}`,
+    product,
+    location,
+    timestamp: job.createdAt
+  });
+});
+
+/**
+ * GET /api/zepto - Scrape Zepto only
+ */
+app.get('/api/zepto', async (req, res) => {
+  const { product, location } = req.query;
+
+  if (!product || !location) {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing required parameters',
+      message: 'Both "product" and "location" query parameters are required',
+      example: '/api/zepto?product=lays&location=RT%20Nagar'
+    });
+  }
+
+  const jobId = `zepto-${Date.now()}-${++jobCounter}`;
+  const job = {
+    id: jobId,
+    website: 'zepto',
+    product,
+    location,
+    status: 'queued',
+    createdAt: new Date().toISOString(),
+    result: null,
+    error: null
+  };
+  
+  jobs.set(jobId, job);
+
+  scrapeSingleWebsiteInBackground(jobId, 'zepto', product, location).catch(err => {
+    console.error(`Job ${jobId} failed:`, err);
+    const job = jobs.get(jobId);
+    if (job) {
+      job.status = 'failed';
+      job.error = err.message;
+    }
+  });
+
+  res.status(202).json({
+    success: true,
+    message: 'Zepto scraping job started',
+    jobId: jobId,
+    status: 'queued',
+    checkStatus: `/api/job/${jobId}`,
+    product,
+    location,
+    timestamp: job.createdAt
+  });
+});
+
+/**
+ * GET /api/jiomart - Scrape JioMart only
+ */
+app.get('/api/jiomart', async (req, res) => {
+  const { product, location } = req.query;
+
+  if (!product || !location) {
+    return res.status(400).json({
+      success: false,
+      error: 'Missing required parameters',
+      message: 'Both "product" and "location" query parameters are required',
+      example: '/api/jiomart?product=lays&location=RT%20Nagar'
+    });
+  }
+
+  const jobId = `jiomart-${Date.now()}-${++jobCounter}`;
+  const job = {
+    id: jobId,
+    website: 'jiomart',
+    product,
+    location,
+    status: 'queued',
+    createdAt: new Date().toISOString(),
+    result: null,
+    error: null
+  };
+  
+  jobs.set(jobId, job);
+
+  scrapeSingleWebsiteInBackground(jobId, 'jiomart', product, location).catch(err => {
+    console.error(`Job ${jobId} failed:`, err);
+    const job = jobs.get(jobId);
+    if (job) {
+      job.status = 'failed';
+      job.error = err.message;
+    }
+  });
+
+  res.status(202).json({
+    success: true,
+    message: 'JioMart scraping job started',
+    jobId: jobId,
+    status: 'queued',
+    checkStatus: `/api/job/${jobId}`,
+    product,
+    location,
+    timestamp: job.createdAt
+  });
+});
+
+/**
+ * Background scraping function for a single website - runs asynchronously
+ * This does NOT block the request handler
+ */
+async function scrapeSingleWebsiteInBackground(jobId, websiteName, product, location) {
+  const job = jobs.get(jobId);
+  if (!job) return;
+
+  try {
+    job.status = 'processing';
+    console.log(`\n${'='.repeat(60)}`);
+    console.log(`Job ${jobId}: Scraping "${product}" in "${location}" from ${websiteName}`);
+    console.log(`${'='.repeat(60)}\n`);
+
+    // Lazy import - only when actually needed
+    const { executeOnWebsite, extractDataFromHtml } = await import('./location-selector-orchestrator.js');
+
+    // Store original argv (request-scoped, not global)
+    const originalArgv = [...process.argv];
+
+    try {
+      // Call the single website executor
+      const result = await executeOnWebsite(websiteName, product, location);
+      
+      // Restore original argv
+      process.argv = originalArgv;
+      
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      let extractedData = null;
+
+      if (result.success) {
+        // Check if website returns JSON data directly (Swiggy, DMart, JioMart, Nature's Basket, Zepto)
+        if (result.jsonData) {
+          console.log(`Job ${jobId}: Processing ${result.website} JSON data...`);
+          const jsonData = result.jsonData;
+          
+          // Normalize website name to match frontend expectations
+          let normalizedWebsite = result.website;
+          if (normalizedWebsite.toLowerCase() === 'swiggy') {
+            normalizedWebsite = 'Swiggy Instamart';
+          } else if (normalizedWebsite.toLowerCase() === 'dmart') {
+            normalizedWebsite = 'D-Mart';
+          } else if (normalizedWebsite.toLowerCase() === 'jiomart') {
+            normalizedWebsite = 'JioMart';
+          } else if (normalizedWebsite.toLowerCase() === 'naturesbasket') {
+            normalizedWebsite = "Nature's Basket";
+          } else if (normalizedWebsite.toLowerCase() === 'zepto') {
+            normalizedWebsite = 'Zepto';
+          }
+          
+          // Extract products from JSON data
+          extractedData = {
+            website: normalizedWebsite,
+            location: jsonData.location || location,
+            products: (jsonData.products || []).map(p => ({
+              name: p.name,
+              price: p.price,
+              mrp: p.mrp,
+              discount: p.discount || null,
+              discountAmount: p.discountAmount || null,
+              isOutOfStock: p.isOutOfStock || false,
+              imageUrl: p.imageUrl || null,
+              productUrl: p.productUrl || null
+            }))
+          };
+          
+          if (extractedData.products && extractedData.products.length > 0) {
+            console.log(`Job ${jobId}: ✅ Extracted ${extractedData.products.length} product(s) from ${result.website} (normalized to: ${normalizedWebsite})`);
+          } else {
+            console.log(`Job ${jobId}: ⚠️  ${result.website} JSON data has no products`);
+          }
+        } else if (result.html && typeof result.html === 'string' && result.html.length > 0) {
+          // Other websites return HTML, extract data from HTML
+          console.log(`Job ${jobId}: Processing ${result.website} HTML (${result.html.length} chars)...`);
+          const extracted = await extractDataFromHtml(
+            result.html, 
+            result.website, 
+            `${result.website}-${location.toLowerCase().replace(/\s+/g, '-')}-${product.toLowerCase().replace(/\s+/g, '-')}-${timestamp}.html`
+          );
+          if (extracted) {
+            // Normalize website name to match frontend expectations
+            let normalizedWebsite = extracted.website || result.website;
+            if (normalizedWebsite.toLowerCase() === 'dmart') {
+              normalizedWebsite = 'D-Mart';
+            } else if (normalizedWebsite.toLowerCase() === 'jiomart') {
+              normalizedWebsite = 'JioMart';
+            } else if (normalizedWebsite.toLowerCase() === 'naturesbasket') {
+              normalizedWebsite = "Nature's Basket";
+            } else if (normalizedWebsite.toLowerCase() === 'zepto') {
+              normalizedWebsite = 'Zepto';
+            }
+            extracted.website = normalizedWebsite;
+            
+            if (extracted.products && extracted.products.length > 0) {
+              console.log(`Job ${jobId}: ✅ Extracted ${extracted.products.length} product(s) from ${result.website} (normalized to: ${normalizedWebsite})`);
+            } else {
+              console.log(`Job ${jobId}: ⚠️  ${result.website} extraction returned data but no products (${extracted.products?.length || 0} products)`);
+            }
+            extractedData = extracted;
+          } else {
+            console.log(`Job ${jobId}: ⚠️  ${result.website} extraction returned null/undefined`);
+          }
+        } else {
+          console.log(`Job ${jobId}: ⚠️  ${result.website} has no valid HTML (html type: ${typeof result.html}, length: ${result.html?.length || 0})`);
+        }
+      } else {
+        throw new Error(result.error || 'Scraping failed');
+      }
+
+      // Update job with result
+      job.status = 'completed';
+      
+      // Normalize website name for frontend
+      let websiteNameNormalized = websiteName;
+      if (websiteName === 'swiggy') {
+        websiteNameNormalized = 'Swiggy Instamart';
+      } else if (websiteName === 'jiomart') {
+        websiteNameNormalized = 'JioMart';
+      } else if (websiteName === 'naturesbasket') {
+        websiteNameNormalized = "Nature's Basket";
+      } else if (websiteName === 'dmart') {
+        websiteNameNormalized = 'D-Mart';
+      }
+      
+      job.result = {
+        success: true,
+        timestamp: timestamp,
+        product: product,
+        location: location,
+        website: websiteNameNormalized,
+        data: extractedData,
+        summary: {
+          totalWebsites: 1,
+          successful: extractedData ? 1 : 0,
+          failed: extractedData ? 0 : 1,
+          successCount: extractedData ? 1 : 0,
+          totalProducts: extractedData?.products?.length || 0,
+          totalDuration: ((Date.now() - new Date(job.createdAt).getTime()) / 1000).toFixed(2) + 's'
+        }
+      };
+
+      // Save JSON output to file
+      const jsonOutput = {
+        product: product,
+        location: location,
+        timestamp: timestamp,
+        website: websiteNameNormalized,
+        products: extractedData ? (extractedData.products || []).map(p => ({
+          name: p.name,
+          price: p.price,
+          mrp: p.mrp,
+          discount: p.discount || null,
+          discountAmount: p.discountAmount || null,
+          isOutOfStock: p.isOutOfStock || false,
+          imageUrl: p.imageUrl || null,
+          productUrl: p.productUrl || null
+        })) : [],
+        summary: job.result.summary
+      };
+
+      // Ensure output directory exists
+      const outputDir = join(__dirname, 'output');
+      if (!existsSync(outputDir)) {
+        mkdirSync(outputDir, { recursive: true });
+      }
+
+      // Save JSON file
+      const jsonFilename = `output/${websiteName}-${product.toLowerCase().replace(/\s+/g, '-')}-${location.toLowerCase().replace(/\s+/g, '-')}-${timestamp}.json`;
+      const jsonPath = join(__dirname, jsonFilename);
+      writeFileSync(jsonPath, JSON.stringify(jsonOutput, null, 2), 'utf8');
+      console.log(`Job ${jobId}: 📄 JSON saved to: ${jsonFilename}`);
+
+      console.log(`Job ${jobId}: ✅ Completed successfully`);
+    } catch (error) {
+      process.argv = originalArgv;
+      throw error;
+    }
+  } catch (error) {
+    console.error(`Job ${jobId}: ❌ Error:`, error);
+    job.status = 'failed';
+    job.error = error.message;
+  }
+}
 
 /**
  * Background scraping function - runs asynchronously
